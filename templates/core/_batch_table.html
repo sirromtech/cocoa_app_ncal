@@ -1,0 +1,21 @@
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Batch</th><th>Farmer</th><th>Source</th><th>Drying</th><th class="num">Wet kg</th><th class="num">Dry kg</th><th>Started</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for b in batches %}
+        <tr class="row-link" onclick="location.href='{% url 'batch_detail' b.code %}'">
+          <td><a href="{% url 'batch_detail' b.code %}"><strong>{{ b.code }}</strong></a></td>
+          <td>{{ b.farmer.full_name }}<div class="muted small">{{ b.farmer.member_number }} · {{ b.farmer.cooperative.code }}{% if b.farmer.cluster %} · {{ b.farmer.cluster.name }}{% endif %}</div></td>
+          <td>{{ b.get_bean_source_display }}</td>
+          <td>{{ b.get_drying_method_display }}</td>
+          <td class="num">{{ b.wet_weight_kg|floatformat:1 }}</td>
+          <td class="num">{{ b.dry_weight_kg|floatformat:1|default:"–" }}</td>
+          <td>{{ b.started_at|date:"d M Y" }}</td>
+          <td><span class="chip st-{{ b.status|lower }}">{{ b.get_status_display }}</span></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8" class="empty">No batches found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

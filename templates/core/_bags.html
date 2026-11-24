@@ -1,0 +1,19 @@
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Bag</th><th class="num">Weight kg</th><th class="num">Moisture %</th><th class="num">Cut defects %</th><th>Result</th>{% if show_actions %}<th></th>{% endif %}</tr></thead>
+    <tbody>
+      {% for bag, t in bags %}
+        <tr>
+          <td><strong>{{ bag.code }}</strong></td>
+          <td class="num">{{ bag.weight_kg }}</td>
+          <td class="num">{% if t %}<span class="{% if t.moisture_ok %}ok{% else %}bad{% endif %}">{{ t.moisture_pct }}</span>{% else %}–{% endif %}</td>
+          <td class="num">{% if t %}{{ t.cut_defect_pct }}{% else %}–{% endif %}</td>
+          <td>{% if t %}<span class="chip res-{{ t.result|lower }}">{{ t.get_result_display }}</span>{% else %}<span class="chip">Not tested</span>{% endif %}</td>
+          {% if show_actions %}<td class="right"><a class="btn btn-sm {% if t %}btn-ghost{% else %}btn-primary{% endif %}" href="{% url 'bag_test' bag.id %}">{% if t %}Edit test{% else %}Record test{% endif %}</a></td>{% endif %}
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="empty">No bags received at the depot yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

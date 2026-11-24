@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Verify {{ batch.code }}{% endblock %}
+{% block body_class %}public{% endblock %}
+{% block layout %}
+<main class="public-wrap">
+  <header class="public-head">
+    <span class="brand-mark"><svg><use href="#i-pod"/></svg></span>
+    <div><strong>{{ COCOA.ORG_NAME }}</strong><small>Cocoa batch traceability</small></div>
+  </header>
+  <section class="card">
+    <div class="card-head">
+      <h1 class="mono">{{ batch.code }}</h1>
+      <span class="chip st-{{ batch.status|lower }}">{{ batch.get_status_display }}</span>
+    </div>
+    <dl class="facts">
+      <div><dt>Member</dt><dd>{{ batch.farmer.member_number }}</dd></div>
+      <div><dt>Cooperative</dt><dd>{{ batch.farmer.cooperative.name }}</dd></div>
+      <div><dt>Cluster</dt><dd>{{ batch.farmer.cluster.name|default:"–" }}</dd></div>
+      <div><dt>Bean source</dt><dd>{{ batch.get_bean_source_display }}</dd></div>
+      <div><dt>Drying</dt><dd>{{ batch.get_drying_method_display }}</dd></div>
+      <div><dt>Wet → dry</dt><dd>{{ batch.wet_weight_kg }} kg → {% if batch.dry_weight_kg %}{{ batch.dry_weight_kg }} kg{% else %}–{% endif %}</dd></div>
+    </dl>
+    {% if batch.is_compliant %}<p><span class="chip chip-ok">All steps follow the client work instruction</span></p>{% endif %}
+  </section>
+  <section class="card"><h2>Process record</h2>{% include "core/_timeline.html" %}</section>
+  <section class="card"><h2>Depot quality tests</h2>{% include "core/_bags.html" with show_actions=False %}</section>
+</main>
+{% endblock %}

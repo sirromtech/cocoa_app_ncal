@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block subheading %}<p class="muted">{{ COCOA.ORG_NAME }}</p>{% endblock %}
+{% block actions %}
+  <a class="btn btn-primary" href="{% url 'depot_home' %}"><svg><use href="#i-qr"/></svg>Scan batch</a>
+{% endblock %}
+{% block content %}
+<section class="kpis">
+  <div class="kpi"><span>Active farmers</span><strong>{{ kpis.farmers|intcomma }}</strong></div>
+  <div class="kpi"><span>Batches in process</span><strong>{{ kpis.active }}</strong><small>fermenting or drying</small></div>
+  <div class="kpi"><span>Awaiting depot</span><strong>{{ kpis.awaiting }}</strong><small>packed, not received</small></div>
+  <div class="kpi"><span>Dry beans recorded</span><strong>{{ kpis.dry|floatformat:0|intcomma }} kg</strong><small>from {{ kpis.wet|floatformat:0|intcomma }} kg wet</small></div>
+  <div class="kpi kpi-ok"><span>Bags approved (moisture {{ COCOA.MOISTURE_MIN }}–{{ COCOA.MOISTURE_MAX }}%)</span><strong>{% if kpis.approval_pct is not None %}{{ kpis.approval_pct }}%{% else %}–{% endif %}</strong><small>{{ kpis.tests }} bag{{ kpis.tests|pluralize }} tested</small></div>
+  <div class="kpi kpi-pod"><span>Premium (cut ≤ {{ COCOA.CUT_TEST_PREMIUM_MAX }}%)</span><strong>{% if kpis.premium_pct is not None %}{{ kpis.premium_pct }}%{% else %}–{% endif %}</strong></div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><h2>Needs attention</h2><span class="muted small">Steps past their time</span></div>
+    {% if overdue %}
+      <ul class="list">
+        {% for o in overdue %}
+          <li>
+            <a href="{% url 'batch_detail' o.step.batch.code %}">
+              <strong>{{ o.step.batch.code }}</strong> · {{ o.step.label }}
+              <span class="muted small">{{ o.step.batch.farmer.full_name }} · {{ o.step.batch.farmer.cooperative.code }}</span>
+            </a>
+            <span class="chip chip-bad">{{ o.late_hours|floatformat:0 }} h late</span>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="muted small">The farmer may be offline – times update when their phone syncs.</p>
+    {% else %}
+      <p class="empty">Nothing overdue. All active batches are on schedule.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Latest depot tests</h2><a class="small" href="{% url 'depot_home' %}">Depot →</a></div>
+    {% if recent_tests %}
+      <ul class="list">
+        {% for t in recent_tests %}
+          <li>
+            <a href="{% url 'depot_batch' t.bag.batch.code %}"><strong>{{ t.bag.code }}</strong>
+              <span class="muted small">{{ t.bag.batch.farmer.full_name }} · moisture {{ t.moisture_pct }}% · cut {{ t.cut_defect_pct }}%</span></a>
+            <span class="chip res-{{ t.result|lower }}">{{ t.get_result_display }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">No bags tested yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card">
+  <div class="card-head"><h2>Cooperatives this year</h2><a class="small" href="{% url 'reports' %}">Full reports →</a></div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Cooperative</th><th class="num">Farmers</th><th class="num">Batches</th><th class="num">Dry kg</th><th class="num">Yield</th><th class="num">Approved</th><th class="num">Premium</th><th class="num">Compliance</th></tr></thead>
+      <tbody>
+        {% for r in coop_rows %}
+          <tr><td><strong>{{ r.label }}</strong><div class="muted small">{{ r.sub }}</div></td>
+            <td class="num">{{ r.farmer_count }}</td><td class="num">{{ r.batches }}</td>
+            <td class="num">{{ r.dry|floatformat:0|intcomma }}</td>
+            <td class="num">{{ r.yield_pct|default_if_none:"–" }}{% if r.yield_pct is not None %}%{% endif %}</td>
+            <td class="num">{{ r.approval_pct|default_if_none:"–" }}{% if r.approval_pct is not None %}%{% endif %}</td>
+            <td class="num">{{ r.premium_pct|default_if_none:"–" }}{% if r.premium_pct is not None %}%{% endif %}</td>
+            <td class="num">{{ r.compliance_pct|default_if_none:"–" }}{% if r.compliance_pct is not None %}%{% endif %}</td></tr>
+        {% empty %}
+          <tr><td colspan="8" class="empty">No batches recorded this year yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Recent batches</h2><a class="small" href="{% url 'batch_list' %}">All batches →</a></div>
+  {% include "core/_batch_table.html" with batches=recent_batches %}
+</section>
+{% endblock %}

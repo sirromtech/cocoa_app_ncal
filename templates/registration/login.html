@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block body_class %}auth{% endblock %}
+{% block layout %}
+<main class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="brand-mark big"><svg><use href="#i-pod"/></svg></span>
+      <h1>{{ COCOA.ORG_SHORT }} Cocoa</h1>
+      <p>Fermentation &amp; drying records for East Sepik cocoa farmers</p>
+    </div>
+    {% if form.errors %}
+      <div class="alert alert-error">Member number or PIN is not correct. Please try again.</div>
+    {% endif %}
+    <form method="post" class="stack">
+      {% csrf_token %}
+      <label class="field">
+        <span>Member number</span>
+        <input name="username" autocomplete="username" autocapitalize="characters" required autofocus value="{{ form.username.value|default:'' }}">
+      </label>
+      <label class="field">
+        <span>PIN / password</span>
+        <input name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Log in</button>
+    </form>
+    <p class="muted small center">Log in once while you have network. After that the app works in the garden without network and sends your records when network comes back.</p>
+  </div>
+</main>
+{% endblock %}

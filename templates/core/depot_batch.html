@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Depot · {{ batch.code }}{% endblock %}
+{% block heading %}{{ batch.code }}{% endblock %}
+{% block subheading %}<p><span class="chip st-{{ batch.status|lower }}">{{ batch.get_status_display }}</span> <span class="muted">{{ batch.farmer.full_name }} · {{ batch.farmer.member_number }} · {{ batch.farmer.cooperative.name }}</span></p>{% endblock %}
+{% block actions %}
+  <a class="btn btn-ghost" href="{% url 'batch_detail' batch.code %}">Full record</a>
+  <a class="btn btn-ghost" href="{% url 'batch_label' batch.code %}?bags=1" target="_blank"><svg><use href="#i-qr"/></svg>Labels</a>
+{% endblock %}
+{% block content %}
+{% if batch.status == "FERMENTING" or batch.status == "DRYING" %}
+  <div class="alert alert-warning">The farmer's app has not reported this batch as packed. Their phone may not have synced yet – check the process record before receiving.</div>
+{% endif %}
+
+<div class="grid-detail">
+  <div>
+    <section class="card">
+      <div class="card-head"><h2>Bags &amp; quality tests</h2>
+        <span class="muted small">Moisture {{ COCOA.MOISTURE_MIN }}–{{ COCOA.MOISTURE_MAX }}% = approved · Cut defects ≤ {{ COCOA.CUT_TEST_PREMIUM_MAX }}% = premium</span>
+      </div>
+      {% include "core/_bags.html" with show_actions=True %}
+    </section>
+
+    <section class="card">
+      <h2>Receive bags</h2>
+      <form method="post" class="stack" id="receive-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="receive">
+        <label class="field inline">
+          <span>Number of bags</span>
+          <input type="number" id="bag-n" min="1" max="60" value="{{ batch.bag_count|default:1 }}">
+        </label>
+        <div class="bag-weights" id="bag-weights"></div>
+        <button class="btn btn-primary" type="submit">Receive bags</button>
+      </form>
+    </section>
+  </div>
+  <aside>
+    <section class="card">
+      <h2>Process check</h2>
+      <ul class="check-list">
+        {% for r in rows %}
+          <li class="tl-{{ r.state }}">
+            <span>{{ r.def.label }}</span>
+            {% if r.state == "ok" %}<span class="ok">✓</span>{% elif r.state == "warn" %}<span class="warn" title="{{ r.issues|join:', ' }}">{{ r.issues|first }}</span>{% else %}<span class="muted">–</span>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      <dl class="facts facts-col">
+        <div><dt>Wet weight</dt><dd>{{ batch.wet_weight_kg }} kg</dd></div>
+        <div><dt>Dry weight (farmer)</dt><dd>{{ batch.dry_weight_kg|default:"–" }} kg</dd></div>
+        <div><dt>Bags (farmer)</dt><dd>{{ batch.bag_count|default:"–" }}</dd></div>
+      </dl>
+    </section>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var n = document.getElementById('bag-n'), box = document.getElementById('bag-weights');
+  function draw() {
+    var count = Math.max(1, Math.min(60, parseInt(n.value || '1', 10))), old = box.querySelectorAll('input');
+    var vals = Array.prototype.map.call(old, function (i) { return i.value; });
+    box.innerHTML = '';
+    for (var i = 0; i < count; i++) {
+      var l = document.createElement('label'); l.className = 'field';
+      l.innerHTML = '<span>Bag ' + ({{ bags|length }} + i + 1) + ' weight (kg)</span>';
+      var inp = document.createElement('input');
+      inp.type = 'number'; inp.step = '0.1'; inp.min = '0.1'; inp.name = 'weight'; inp.required = true; inp.inputMode = 'decimal';
+      inp.value = vals[i] || '';
+      l.appendChild(inp); box.appendChild(l);
+    }
+  }
+  n.addEventListener('input', draw); draw();
+})();
+</script>
+{% endblock %}

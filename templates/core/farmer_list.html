@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Farmers{% endblock %}
+{% block heading %}Farmers{% endblock %}
+{% block subheading %}<p class="muted">{{ page.paginator.count }} registered</p>{% endblock %}
+{% block actions %}<a class="btn btn-primary" href="{% url 'farmer_create' %}"><svg><use href="#i-plus"/></svg>Register farmer</a>{% endblock %}
+{% block content %}
+<form class="filters card" method="get">
+  <input name="q" value="{{ q }}" placeholder="Search member no., name or village">
+  <select name="coop">
+    <option value="">All cooperatives</option>
+    {% for c in coops %}<option value="{{ c.id }}" {% if c.id|stringformat:"s" == coop %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-primary" type="submit">Search</button>
+</form>
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Member no.</th><th>Name</th><th>Cooperative</th><th>Cluster</th><th>Village</th><th>Phone</th><th class="num">Batches</th><th>App login</th></tr></thead>
+      <tbody>
+        {% for f in page.object_list %}
+          <tr>
+            <td><strong class="mono">{{ f.member_number }}</strong></td>
+            <td>{{ f.full_name }}{% if not f.active %} <span class="chip">Inactive</span>{% endif %}</td>
+            <td>{{ f.cooperative.name }}</td>
+            <td>{{ f.cluster.name|default:"–" }}</td>
+            <td>{{ f.village|default:"–" }}</td>
+            <td>{{ f.phone|default:"–" }}</td>
+            <td class="num"><a href="{% url 'batch_list' %}?q={{ f.member_number }}">{{ f.n_batches }}</a></td>
+            <td>{% if f.user_id %}<span class="chip chip-ok">Yes</span>{% else %}<span class="chip chip-warn">No</span>{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="8" class="empty">No farmers found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "core/_pager.html" %}
+</section>
+{% endblock %}

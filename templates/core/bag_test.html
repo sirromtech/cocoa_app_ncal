@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Test {{ bag.code }}{% endblock %}
+{% block heading %}Quality test · {{ bag.code }}{% endblock %}
+{% block subheading %}<p class="muted">{{ bag.batch.farmer.full_name }} · {{ bag.weight_kg }} kg</p>{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <form method="post" class="stack" id="test-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-error">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+
+    <h2>Moisture test</h2>
+    <label class="field">
+      <span>Moisture % <small class="muted">(acceptable {{ COCOA.MOISTURE_MIN }}–{{ COCOA.MOISTURE_MAX }}%)</small></span>
+      <input type="number" step="0.1" name="moisture_pct" inputmode="decimal" required value="{{ form.moisture_pct.value|default_if_none:'' }}">
+      {% for e in form.moisture_pct.errors %}<em class="err">{{ e }}</em>{% endfor %}
+    </label>
+
+    <h2>Cut test</h2>
+    <label class="field">
+      <span>Beans cut</span>
+      <input type="number" name="beans_cut" min="1" required value="{{ form.beans_cut.value|default_if_none:300 }}">
+      {% for e in form.beans_cut.errors %}<em class="err">{{ e }}</em>{% endfor %}
+    </label>
+    <div class="form-grid">
+      {% for f in form %}
+        {% if f.name in "purple slaty mouldy insect germinated" and f.name != "beans_cut" %}
+          <label class="field">
+            <span>{{ f.label }}</span>
+            <input type="number" min="0" name="{{ f.name }}" value="{{ f.value|default_if_none:0 }}" class="defect">
+            {% for e in f.errors %}<em class="err">{{ e }}</em>{% endfor %}
+          </label>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="result-preview" id="preview"></div>
+    <label class="field"><span>Remarks</span><input name="remarks" value="{{ form.remarks.value|default_if_none:'' }}"></label>
+    <div class="row">
+      <button class="btn btn-primary btn-lg" type="submit">Save test</button>
+      <a class="btn btn-ghost" href="{% url 'depot_batch' bag.batch.code %}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var f = document.getElementById('test-form'), out = document.getElementById('preview');
+  var MIN = {{ COCOA.MOISTURE_MIN }}, MAX = {{ COCOA.MOISTURE_MAX }}, CUT = {{ COCOA.CUT_TEST_PREMIUM_MAX }};
+  function calc() {
+    var m = parseFloat(f.moisture_pct.value), cut = parseInt(f.beans_cut.value, 10) || 0, d = 0;
+    f.querySelectorAll('.defect').forEach(function (i) { d += parseInt(i.value, 10) || 0; });
+    if (isNaN(m) || !cut) { out.innerHTML = ''; return; }
+    var pct = Math.round(d * 1000 / cut) / 10, ok = m >= MIN && m <= MAX, prem = ok && pct <= CUT;
+    out.className = 'result-preview ' + (prem ? 'res-premium' : ok ? 'res-approved' : 'res-rejected');
+    out.textContent = 'Cut defects ' + pct + '% · ' + (prem ? 'Approved – premium' : ok ? 'Approved for export' : 'Not accepted – re-dry');
+  }
+  f.addEventListener('input', calc); calc();
+})();
+</script>
+{% endblock %}

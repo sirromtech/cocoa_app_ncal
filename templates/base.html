@@ -1,0 +1,73 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#3b2314">
+  <title>{% block title %}Cocoa Processing{% endblock %} · {{ COCOA.ORG_SHORT }}</title>
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <link rel="icon" href="{% static 'icons/icon-192.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}staff{% endblock %}">
+{% include "_icons.html" %}
+{% block layout %}
+<div class="layout">
+  <aside class="sidebar">
+    <a class="brand" href="{% url 'dashboard' %}">
+      <span class="brand-mark"><svg><use href="#i-pod"/></svg></span>
+      <span><strong>{{ COCOA.ORG_SHORT }} Cocoa</strong><small>Processing &amp; quality</small></span>
+    </a>
+    <nav class="side-nav">
+      {% if not user.is_staff %}
+      <a href="{% url 'app_shell' %}"><svg><use href="#i-home"/></svg>Farmer app</a>
+      {% else %}
+      <a href="{% url 'dashboard' %}" class="{% if nav == 'dashboard' %}active{% endif %}"><svg><use href="#i-home"/></svg>Dashboard</a>
+      <a href="{% url 'batch_list' %}" class="{% if nav == 'batches' %}active{% endif %}"><svg><use href="#i-layers"/></svg>Batches</a>
+      <a href="{% url 'depot_home' %}" class="{% if nav == 'depot' %}active{% endif %}"><svg><use href="#i-box"/></svg>Depot tests</a>
+      <a href="{% url 'reports' %}" class="{% if nav == 'reports' %}active{% endif %}"><svg><use href="#i-chart"/></svg>Reports</a>
+      <a href="{% url 'farmer_list' %}" class="{% if nav == 'farmers' %}active{% endif %}"><svg><use href="#i-users"/></svg>Farmers</a>
+      {% if user.is_superuser %}<a href="{% url 'admin:index' %}"><svg><use href="#i-cog"/></svg>Admin</a>{% endif %}
+      {% endif %}
+    </nav>
+    <div class="side-foot">
+      <div class="who"><svg><use href="#i-user"/></svg>{{ user.get_full_name|default:user.username }}</div>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit">Log out</button></form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1>{% block heading %}{% endblock %}</h1>
+        {% block subheading %}{% endblock %}
+      </div>
+      <div class="topbar-actions">{% block actions %}{% endblock %}</div>
+    </header>
+    {% if messages %}
+      <div class="messages">
+        {% for m in messages %}<div class="alert alert-{{ m.tags }}">{{ m }}</div>{% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if user.is_staff %}
+  <nav class="bottom-nav">
+    <a href="{% url 'dashboard' %}" class="{% if nav == 'dashboard' %}active{% endif %}"><svg><use href="#i-home"/></svg>Home</a>
+    <a href="{% url 'batch_list' %}" class="{% if nav == 'batches' %}active{% endif %}"><svg><use href="#i-layers"/></svg>Batches</a>
+    <a href="{% url 'depot_home' %}" class="{% if nav == 'depot' %}active{% endif %}"><svg><use href="#i-box"/></svg>Depot</a>
+    <a href="{% url 'reports' %}" class="{% if nav == 'reports' %}active{% endif %}"><svg><use href="#i-chart"/></svg>Reports</a>
+    <a href="{% url 'farmer_list' %}" class="{% if nav == 'farmers' %}active{% endif %}"><svg><use href="#i-users"/></svg>Farmers</a>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}
+<script>
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('{% url "service_worker" %}').catch(function(){}); }
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

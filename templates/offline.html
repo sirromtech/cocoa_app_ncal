@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Offline{% endblock %}
+{% block body_class %}auth{% endblock %}
+{% block layout %}
+<main class="auth-wrap">
+  <div class="auth-card center">
+    <span class="brand-mark big"><svg><use href="#i-pod"/></svg></span>
+    <h1>No network</h1>
+    <p class="muted">This page needs network. Your farm records are safe in the farmer app.</p>
+    <a class="btn btn-primary btn-block btn-lg" href="/app/">Open farmer app</a>
+  </div>
+</main>
+{% endblock %}

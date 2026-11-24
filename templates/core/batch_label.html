@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Labels {{ batch.code }}{% endblock %}
+{% block body_class %}print-page{% endblock %}
+{% block layout %}
+<div class="print-bar no-print">
+  <button class="btn btn-primary" onclick="window.print()">Print</button>
+  <a class="btn btn-ghost" href="?bags=1">One label per bag</a>
+  <a class="btn btn-ghost" href="?">Single batch label</a>
+</div>
+<div class="label-sheet">
+  {% for n in labels %}
+    <div class="label">
+      <img src="{% url 'batch_qr' batch.code %}" alt="QR">
+      <div>
+        <div class="label-org">{{ COCOA.ORG_SHORT }} · {{ batch.farmer.cooperative.code }}</div>
+        <div class="label-code">{{ batch.code }}</div>
+        {% if n %}<div class="label-bag">BAG {{ n }} of {{ total }}</div>{% endif %}
+        <div>{{ batch.farmer.member_number }} · {{ batch.farmer.full_name }}</div>
+        <div>{% if batch.farmer.cluster %}{{ batch.farmer.cluster.name }} · {% endif %}{{ batch.get_drying_method_display }}</div>
+        <div>Packed {{ batch.completed_at|date:"d M Y"|default:"–" }}{% if batch.dry_weight_kg %} · {{ batch.dry_weight_kg }} kg dry{% endif %}</div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

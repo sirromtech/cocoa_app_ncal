@@ -1,0 +1,53 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#3b2314">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>{{ COCOA.ORG_SHORT }} Cocoa – Farmer</title>
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <link rel="icon" href="{% static 'icons/icon-192.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="farmer-app">
+{% include "_icons.html" %}
+<header class="app-bar">
+  <a class="brand" href="#/">
+    <span class="brand-mark"><svg><use href="#i-pod"/></svg></span>
+    <strong>{{ COCOA.ORG_SHORT }} Cocoa</strong>
+  </a>
+  <button class="sync-pill" id="sync-pill" type="button" aria-live="polite">
+    <svg><use href="#i-sync"/></svg><span>…</span>
+  </button>
+</header>
+
+<main id="view" class="app-view" tabindex="-1">
+  <div class="loading">Loading…</div>
+</main>
+
+<nav class="bottom-nav app-nav" id="app-nav">
+  <a href="#/" data-nav="home"><svg><use href="#i-home"/></svg>Home</a>
+  <a href="#/new" data-nav="new" class="nav-cta"><svg><use href="#i-plus"/></svg>New batch</a>
+  <a href="#/batches" data-nav="batches"><svg><use href="#i-layers"/></svg>Batches</a>
+  <a href="#/me" data-nav="me"><svg><use href="#i-user"/></svg>Me</a>
+</nav>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<form id="logout-form" method="post" action="{% url 'logout' %}" hidden>{% csrf_token %}</form>
+
+{{ step_defs|json_script:"step-defs" }}
+{{ app_config|json_script:"app-config" }}
+<script src="{% static 'js/db.js' %}"></script>
+<script src="{% static 'js/sync.js' %}"></script>
+<script src="{% static 'js/app.js' %}"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('{% url "service_worker" %}').catch(function (e) { console.warn('SW', e); });
+  }
+</script>
+</body>
+</html>

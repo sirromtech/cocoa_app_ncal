@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Batches{% endblock %}
+{% block heading %}Batches{% endblock %}
+{% block subheading %}<p class="muted">{{ page.paginator.count }} batch{{ page.paginator.count|pluralize:"es" }}</p>{% endblock %}
+{% block content %}
+<form class="filters card" method="get">
+  <input name="q" value="{{ q }}" placeholder="Search code, member no. or name">
+  <select name="status">
+    <option value="">All statuses</option>
+    {% for v, l in statuses %}<option value="{{ v }}" {% if v == status %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select>
+  <select name="coop">
+    <option value="">All cooperatives</option>
+    {% for c in coops %}<option value="{{ c.id }}" {% if c.id|stringformat:"s" == coop %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-primary" type="submit">Filter</button>
+</form>
+<section class="card">
+  {% include "core/_batch_table.html" with batches=page.object_list %}
+  {% include "core/_pager.html" %}
+</section>
+{% endblock %}

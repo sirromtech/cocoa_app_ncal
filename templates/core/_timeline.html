@@ -1,0 +1,32 @@
+<ol class="timeline">
+  {% for r in rows %}
+    <li class="tl-item tl-{{ r.state }}">
+      <span class="tl-dot">{% if r.state == "ok" %}<svg><use href="#i-check"/></svg>{% elif r.state == "warn" %}!{% else %}{{ forloop.counter }}{% endif %}</span>
+      <div class="tl-body">
+        <div class="tl-head">
+          <strong>{{ r.def.label }}</strong>
+          {% if r.def.hours %}<span class="muted small">required {{ r.def.hours }} h</span>{% endif %}
+          {% if r.state == "current" %}<span class="chip st-fermenting">In progress</span>{% endif %}
+          {% if r.state == "pending" %}<span class="chip">Not started</span>{% endif %}
+        </div>
+        {% if r.step %}
+          <dl class="facts">
+            {% if r.step.started_at %}<div><dt>Start</dt><dd>{{ r.step.started_at|date:"D d M, H:i" }}</dd></div>{% endif %}
+            {% if r.step.ended_at %}<div><dt>End</dt><dd>{{ r.step.ended_at|date:"D d M, H:i" }}</dd></div>{% endif %}
+            {% if r.step.duration_hours is not None and r.def.hours %}<div><dt>Duration</dt><dd>{{ r.step.duration_hours|floatformat:1 }} h</dd></div>{% endif %}
+            {% if r.step.weight_start_kg is not None %}<div><dt>Weight in</dt><dd>{{ r.step.weight_start_kg }} kg</dd></div>{% endif %}
+            {% if r.step.weight_end_kg is not None %}<div><dt>Weight out</dt><dd>{{ r.step.weight_end_kg }} kg</dd></div>{% endif %}
+            {% if r.step.latitude is not None %}<div><dt>GPS</dt><dd><a href="https://maps.google.com/?q={{ r.step.latitude }},{{ r.step.longitude }}" target="_blank" rel="noopener">{{ r.step.latitude|floatformat:4 }}, {{ r.step.longitude|floatformat:4 }}</a></dd></div>{% endif %}
+          </dl>
+          {% if r.step.notes %}<p class="small">{{ r.step.notes }}</p>{% endif %}
+        {% endif %}
+        {% if r.photos %}
+          <div class="photo-row">
+            {% for p in r.photos %}<a href="{{ p.image.url }}" target="_blank"><img src="{{ p.image.url }}" alt="{{ r.def.label }} photo" loading="lazy"></a>{% endfor %}
+          </div>
+        {% endif %}
+        {% for i in r.issues %}<span class="chip chip-warn">{{ i }}</span>{% endfor %}
+      </div>
+    </li>
+  {% endfor %}
+</ol>

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Reports{% endblock %}
+{% block heading %}Production reports{% endblock %}
+{% block subheading %}<p class="muted">{{ d_from|date:"d M Y" }} – {{ d_to|date:"d M Y" }}</p>{% endblock %}
+{% block actions %}
+  <a class="btn btn-ghost" href="?{{ csv_query }}">Download CSV</a>
+  <button class="btn btn-ghost" onclick="window.print()">Print</button>
+{% endblock %}
+{% block content %}
+<nav class="tabs no-print">
+  {% for v, l in scopes %}
+    <a class="{% if v == scope %}active{% endif %}" href="?scope={{ v }}&from={{ d_from|date:'Y-m-d' }}&to={{ d_to|date:'Y-m-d' }}&coop={{ coop }}">By {{ l|lower }}</a>
+  {% endfor %}
+</nav>
+<form class="filters card no-print" method="get">
+  <input type="hidden" name="scope" value="{{ scope }}">
+  <label class="field inline"><span>From</span><input type="date" name="from" value="{{ d_from|date:'Y-m-d' }}"></label>
+  <label class="field inline"><span>To</span><input type="date" name="to" value="{{ d_to|date:'Y-m-d' }}"></label>
+  <select name="coop">
+    <option value="">All cooperatives</option>
+    {% for c in coops %}<option value="{{ c.id }}" {% if c.id|stringformat:"s" == coop %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-primary" type="submit">Apply</button>
+</form>
+
+<section class="kpis">
+  <div class="kpi"><span>Batches</span><strong>{{ totals.batches }}</strong><small>{{ totals.completed }} completed</small></div>
+  <div class="kpi"><span>Wet beans</span><strong>{{ totals.wet|floatformat:0|intcomma }} kg</strong></div>
+  <div class="kpi"><span>Dry beans</span><strong>{{ totals.dry|floatformat:0|intcomma }} kg</strong><small>yield {{ totals.yield_pct|default_if_none:"–" }}{% if totals.yield_pct is not None %}%{% endif %}</small></div>
+  <div class="kpi kpi-ok"><span>Bags approved</span><strong>{{ totals.approval_pct|default_if_none:"–" }}{% if totals.approval_pct is not None %}%{% endif %}</strong><small>{{ totals.approved }} of {{ totals.tested }} tested</small></div>
+  <div class="kpi kpi-pod"><span>Premium bags</span><strong>{{ totals.premium_pct|default_if_none:"–" }}{% if totals.premium_pct is not None %}%{% endif %}</strong><small>{{ totals.premium }} bags</small></div>
+</section>
+
+<section class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr>
+        <th>{% for v, l in scopes %}{% if v == scope %}{{ l }}{% endif %}{% endfor %}</th>
+        {% if scope != "farmer" %}<th class="num">Farmers</th>{% endif %}
+        <th class="num">Batches</th><th class="num">Wet kg</th><th class="num">Dry kg</th><th class="num">Yield</th>
+        <th class="num">Bags tested</th><th class="num">Approved</th><th class="num">Premium</th>
+        <th class="num">Avg moisture</th><th class="num">Avg cut defects</th><th class="num">Process compliance</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+          <tr>
+            <td><strong>{{ r.label }}</strong><div class="muted small">{{ r.sub|default:"" }}</div></td>
+            {% if scope != "farmer" %}<td class="num">{{ r.farmer_count }}</td>{% endif %}
+            <td class="num">{{ r.batches }}</td>
+            <td class="num">{{ r.wet|floatformat:0|intcomma }}</td>
+            <td class="num">{{ r.dry|floatformat:0|intcomma }}</td>
+            <td class="num">{% if r.yield_pct is not None %}{{ r.yield_pct }}%{% else %}–{% endif %}</td>
+            <td class="num">{{ r.tested }}</td>
+            <td class="num">{% if r.approval_pct is not None %}{{ r.approval_pct }}%{% else %}–{% endif %}</td>
+            <td class="num">{% if r.premium_pct is not None %}{{ r.premium_pct }}%{% else %}–{% endif %}</td>
+            <td class="num">{% if r.avg_moisture is not None %}{{ r.avg_moisture }}%{% else %}–{% endif %}</td>
+            <td class="num">{% if r.avg_cut is not None %}{{ r.avg_cut }}%{% else %}–{% endif %}</td>
+            <td class="num">{% if r.compliance_pct is not None %}<span class="bar"><i style="width:{{ r.compliance_pct|floatformat:0 }}%"></i></span>{{ r.compliance_pct }}%{% else %}–{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="12" class="empty">No batches in this period.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted small">Yield = dry ÷ wet weight for packed batches. Approved = moisture {{ COCOA.MOISTURE_MIN }}–{{ COCOA.MOISTURE_MAX }}%. Premium = approved and cut-test defects ≤ {{ COCOA.CUT_TEST_PREMIUM_MAX }}%. Process compliance = completed batches where every step has its photo, weight and the required fermentation time (± {{ COCOA.FERMENT_TOLERANCE_HOURS }} h).</p>
+</section>
+{% endblock %}

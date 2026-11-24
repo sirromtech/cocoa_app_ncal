@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Batch {{ batch.code }}{% endblock %}
+{% block heading %}Batch {{ batch.code }}{% endblock %}
+{% block subheading %}<p><span class="chip st-{{ batch.status|lower }}">{{ batch.get_status_display }}</span></p>{% endblock %}
+{% block actions %}
+  <a class="btn btn-ghost" href="{% url 'batch_label' batch.code %}?bags=1" target="_blank"><svg><use href="#i-qr"/></svg>Print bag labels</a>
+  {% if user.is_staff %}<a class="btn btn-primary" href="{% url 'depot_batch' batch.code %}"><svg><use href="#i-box"/></svg>Depot</a>{% endif %}
+{% endblock %}
+{% block content %}
+<div class="grid-detail">
+  <div>
+    <section class="card">
+      <div class="card-head"><h2>Process record</h2>
+        {% if batch.is_compliant %}<span class="chip chip-ok">Follows work instruction</span>{% endif %}
+      </div>
+      {% include "core/_timeline.html" %}
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>Depot results</h2></div>
+      {% include "core/_bags.html" with show_actions=user.is_staff %}
+    </section>
+  </div>
+  <aside>
+    <section class="card qr-card">
+      <img src="{% url 'batch_qr' batch.code %}" alt="QR code for {{ batch.code }}" width="200" height="200">
+      <p class="mono">{{ batch.code }}</p>
+      <a class="small" href="{{ verify_url }}" target="_blank">Public traceability page →</a>
+    </section>
+    <section class="card">
+      <h2>Details</h2>
+      <dl class="facts facts-col">
+        <div><dt>Farmer</dt><dd>{{ batch.farmer.full_name }} ({{ batch.farmer.member_number }})</dd></div>
+        <div><dt>Cooperative</dt><dd>{{ batch.farmer.cooperative.name }}</dd></div>
+        <div><dt>Cluster</dt><dd>{{ batch.farmer.cluster.name|default:"–" }}</dd></div>
+        <div><dt>Bean source</dt><dd>{{ batch.get_bean_source_display }}{% if batch.source_detail %} – {{ batch.source_detail }}{% endif %}</dd></div>
+        <div><dt>Fermented by</dt><dd>{{ batch.get_fermented_by_display }}</dd></div>
+        <div><dt>Drying</dt><dd>{{ batch.get_drying_method_display }}</dd></div>
+        <div><dt>Wet weight</dt><dd>{{ batch.wet_weight_kg }} kg</dd></div>
+        <div><dt>Dry weight</dt><dd>{% if batch.dry_weight_kg %}{{ batch.dry_weight_kg }} kg{% else %}–{% endif %}</dd></div>
+        <div><dt>Yield</dt><dd>{% if batch.yield_pct %}{{ batch.yield_pct|floatformat:1 }}%{% else %}–{% endif %}</dd></div>
+        <div><dt>Bags packed</dt><dd>{{ batch.bag_count|default:"–" }}</dd></div>
+        <div><dt>Started</dt><dd>{{ batch.started_at|date:"d M Y H:i" }}</dd></div>
+        <div><dt>Packed</dt><dd>{{ batch.completed_at|date:"d M Y H:i"|default:"–" }}</dd></div>
+      </dl>
+      {% if batch.notes %}<p class="small">{{ batch.notes }}</p>{% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}
